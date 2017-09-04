@@ -1,3 +1,5 @@
+# Reproducible Research: Peer Assessment 1
+
 # Week 18 - Activity Monitoring Analysis
 IC
 
@@ -5,7 +7,8 @@ IC
 
 Best thing to do first is to install packages you do not have for the analysis. The following code checks if a package is there and then installs the package:
 
-```{r, message=F, results = "hide", warning = F}
+
+```r
 # Always clear global environment
 rm(list = ls())
 
@@ -25,7 +28,8 @@ require("lubridate")
 ```
 
 Next thing to do is to set the working directory:
-```{r}
+
+```r
 setwd("~/R/Coursera/Week 18/")
 ```
 Note: This line can be replaced with ```setwd(dirname(rstudioapi::getActiveDocumentContext()$path))``` in RStudio.
@@ -33,21 +37,24 @@ Note: This line can be replaced with ```setwd(dirname(rstudioapi::getActiveDocum
 # Loading Data
 
 The following is used to load in the data for the analysis:
-```{r}
+
+```r
 rawData = read.csv("activity.csv",stringsAsFactors = F) # removes factors which can be annoying for analysis
 ```
 
 # What is mean total number of steps taken per day?
 
 To calculate the number of steps per day, we can use the dplyr package:
-```{r,message=F, warning = F}
+
+```r
 stepsPerDay =   rawData %>%
                 group_by(date) %>%
                 summarise(Steps = sum(steps,na.rm = T))
 ```
 
 We can then calculate the days since the first day we started the programme. This removes any dependencies.
-```{r}
+
+```r
 # change to date
 stepsPerDay$date = date(stepsPerDay$date)
 
@@ -56,7 +63,8 @@ stepsPerDay$DaysSinceFirst = stepsPerDay$date - min(stepsPerDay$date)
 ```
 
 We can now plot a histogram of this data to see how the number of steps change over the course of the experiment:
-```{r}
+
+```r
 # plot hist using plot
 with(stepsPerDay,barplot(Steps,
                          names.arg= DaysSinceFirst, 
@@ -67,15 +75,18 @@ with(stepsPerDay,barplot(Steps,
                          space = 0))
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
 From this data, we can calculate the mean and median from:
 
-* Mean: `r as.integer(round(mean(stepsPerDay$Steps),0))`
-* Median : `r as.integer(round(median(stepsPerDay$Steps),0))`
+* Mean: 9354
+* Median : 10395
 
 # What is the average daily activity pattern?
 
 First thing we have to do is average all the data for the various 5 minute intervals:
-```{r}
+
+```r
 # make a dat frame for the 5-min intervals
  intervalSteps =    rawData %>%
                     group_by(interval) %>%
@@ -83,7 +94,8 @@ First thing we have to do is average all the data for the various 5 minute inter
 ```
 
 Next we can plot this data to obtain a useful trend: 
-```{r}
+
+```r
 # plot data
 with(intervalSteps,plot(interval,Average,
                         type = "l",
@@ -93,9 +105,12 @@ with(intervalSteps,plot(interval,Average,
                         cex = 0.6))
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
 From this, we can see that most of the activity ranges after the 5 min mark. Using the plot and the data set, we can determine at which time the most steps occur, as well as which 5-minuth interval this occurs at. The following code produces this:
 
-```{r}
+
+```r
 # Max value
 maxValue = max(intervalSteps$Average)
 
@@ -106,31 +121,34 @@ maxMinutes = as.integer(intervalSteps$interval[match(max(intervalSteps$Average),
 maxThTime = (maxMinutes / 5) + 1
 ```
 
-Therefore, we can conclude that the maximum is `r round(maxValue,2)`, which occurs at `r maxMinutes` after the recording started, which is the `r maxThTime`*th* 5-minute segment. 
+Therefore, we can conclude that the maximum is 206.17, which occurs at 835 after the recording started, which is the 168*th* 5-minute segment. 
 
 # Imputing missing values
 
 The data set contains various NA values within in. We have to do a count for each column and see how many NA's are in each:
 
-```{r}
+
+```r
 # count number of NA's
 stepsNA = sum(is.na(rawData$steps))
 dateNA = sum(is.na(rawData$date))
 intervalNA = sum(is.na(rawData$interval))
 ```
 
-From this, we see that dataNA and intervalNA have zero NA values. However, the stepsNA has `r stepsNA` NA values. This is about `r as.integer(round(100*stepsNA/nrow(rawData),1))` % of values which have no value. The easiest way to correct this is to substitute them with the mean value of that interval (even though this is not recommended). To achieve this, we use the previous data set (intervalSteps). 
+From this, we see that dataNA and intervalNA have zero NA values. However, the stepsNA has 2304 NA values. This is about 13 % of values which have no value. The easiest way to correct this is to substitute them with the mean value of that interval (even though this is not recommended). To achieve this, we use the previous data set (intervalSteps). 
 
 First we split the data set into two sets - one with only NA's and one with no NA's:
 
-```{r}
+
+```r
 # split data set
 dataNA = rawData[is.na(rawData$steps),]
 data = rawData[!is.na(rawData$steps),]
 ```
 
 Now we can replace the NA values with the means and recombine:
-```{r}
+
+```r
 # merge data from previous set
 dataNA = merge(dataNA,intervalSteps,by.x = "interval",by.y = "interval", all.x = T)
 
@@ -145,7 +163,8 @@ data = rbind(data,dataNA)
 ```
 
 Now follow the same steps and the first analysis (note the NA in the name):
-```{r}
+
+```r
 # collapse and count steps per day (dplyr)
 stepsPerDayNA =   data %>%
     group_by(date) %>%
@@ -159,7 +178,8 @@ stepsPerDayNA$DaysSinceFirst = stepsPerDayNA$date - min(stepsPerDayNA$date)
 ```
 
 Now plot the two histgrams side by side and see if the overall shape changed:
-```{r}
+
+```r
 par(mfrow = c(1,2))
 
 # plot data with NA removed
@@ -181,25 +201,29 @@ with(stepsPerDayNA,barplot(Steps,
                          space = 0))
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+
 From this we can definitely see a differnce in the overall plot. Looking at the means and medians we also see a difference:
 
-* Mean: `r as.integer(round(mean(stepsPerDay$Steps),0))` (NA removed) vs `r as.integer(round(mean(stepsPerDayNA$Steps),0))` (NA replaced)
+* Mean: 9354 (NA removed) vs 10766 (NA replaced)
 
-* Median: `r as.integer(round(median(stepsPerDay$Steps),0))` (NA removed) vs `r as.integer(round(median(stepsPerDayNA$Steps),0))` (NA replaced)
+* Median: 10395 (NA removed) vs 10766 (NA replaced)
 
 We now see a median and mean that is equivalent. This is incorrect to do but it does give insightas to the affect the NA values play on the overall result.
 
 # Are there differences in activity patterns between weekdays and weekends?
 
 To seperate the weekdays from weekends, we can use the lubridate package:
-```{r}
+
+```r
 # add the weekday and weekend factor
 rawData$week = ifelse((wday(rawData$date)>0 & wday(rawData$date)<6),"Weekday","Weekend")
 ```
 
 We now can use dplyr to group all the data and obtain a set for which weekend and weekday intervals averages are calculated:
 
-```{r}
+
+```r
 # reduce to average number
 rawData =   rawData %>%
     group_by(week,interval) %>%
@@ -213,10 +237,23 @@ rawData$week = factor(rawData$week)
 ```
 
 Now we can use the lattice package to plot graphs:
-```{r}
-require(lattice)
 
+```r
+require(lattice)
+```
+
+```
+## Loading required package: lattice
+```
+
+```
+## Warning: package 'lattice' was built under R version 3.4.1
+```
+
+```r
 xyplot(AvgSteps~interval|week, data = rawData, type = "l", layout = c(1,2), ylab = "Number of steps", xlab = "interval")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
 
 Based on the graph, we can see more walking is done on a weekend on average than in the week. 
